@@ -28,6 +28,78 @@ public class BookGroupingService {
             Map<String, List<LibraryFile>> newBookGroups
     ) {}
 
+    public record MergePlan(Long winnerId, List<Long> loserIds) {}
+
+    /**
+     * Finds books that BOOK_PER_FOLDER would have grouped into one book but that already exist as separate
+     * books (a rescan only attaches new files, it never merges existing books). Returns one plan per folder:
+     * the book to keep and the books to fold into it.
+     * <p>
+     * Only plain ebook/comic books whose files all sit in the same non-empty folder are considered. Library-root
+     * files stay separate books under this mode, and folder-based or audiobook entries follow their own
+     * absorption rules, so neither is touched.
+     */
+    public List<MergePlan> planSameFolderMerges(List<BookEntity> books, LibraryEntity libraryEntity) {
+        if (getOrganizationMode(libraryEntity) != LibraryOrganizationMode.BOOK_PER_FOLDER) {
+            return List.of();
+        }
+
+        Map<String, List<BookEntity>> byFolder = new LinkedHashMap<>();
+        for (BookEntity book : books) {
+            String folderKey = mergeableFolderKey(book);
+            if (folderKey != null) {
+                byFolder.computeIfAbsent(folderKey, k -> new ArrayList<>()).add(book);
+            }
+        }
+
+        List<BookFileType> priority = libraryEntity.getFormatPriority();
+        List<MergePlan> plans = new ArrayList<>();
+        for (List<BookEntity> sameFolder : byFolder.values()) {
+            if (sameFolder.size() < 2) {
+                continue;
+            }
+            BookEntity winner = sameFolder.stream()
+                    .min(Comparator.comparingInt((BookEntity b) -> formatRank(b, priority))
+                            .thenComparingLong(BookEntity::getId))
+                    .orElseThrow();
+            List<Long> loserIds = sameFolder.stream()
+                    .map(BookEntity::getId)
+                    .filter(id -> !id.equals(winner.getId()))
+                    .toList();
+            plans.add(new MergePlan(winner.getId(), loserIds));
+        }
+        return plans;
+    }
+
+    private String mergeableFolderKey(BookEntity book) {
+        if (Boolean.TRUE.equals(book.getDeleted()) || book.getLibraryPath() == null || !book.hasFiles()) {
+            return null;
+        }
+        String subPath = null;
+        for (BookFileEntity file : book.getBookFiles()) {
+            if (!file.isBookFormat() || file.isFolderBased() || file.getBookType() == BookFileType.AUDIOBOOK) {
+                return null;
+            }
+            if (file.getFileSubPath() == null || file.getFileSubPath().isEmpty()) {
+                return null;
+            }
+            if (subPath != null && !subPath.equals(file.getFileSubPath())) {
+                return null;
+            }
+            subPath = file.getFileSubPath();
+        }
+        return book.getLibraryPath().getId() + ":" + subPath;
+    }
+
+    private int formatRank(BookEntity book, List<BookFileType> priority) {
+        BookFileEntity primary = book.getPrimaryBookFile();
+        if (primary == null || priority == null) {
+            return Integer.MAX_VALUE;
+        }
+        int index = priority.indexOf(primary.getBookType());
+        return index < 0 ? Integer.MAX_VALUE : index;
+    }
+
     public Map<String, List<LibraryFile>> groupForInitialScan(List<LibraryFile> newFiles, LibraryEntity libraryEntity) {
         LibraryOrganizationMode mode = getOrganizationMode(libraryEntity);
 

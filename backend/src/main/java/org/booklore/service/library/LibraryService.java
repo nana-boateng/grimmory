@@ -212,6 +212,7 @@ public class LibraryService {
                         .libraryId(libraryId)
                         .build();
                 libraryProcessingService.rescanLibrary(context);
+                libraryProcessingService.regroupSameFolderBooks(libraryId);
             } catch (InvalidDataAccessApiUsageException e) {
                 log.debug("InvalidDataAccessApiUsageException - Library id: {}", libraryId);
             } catch (IOException e) {

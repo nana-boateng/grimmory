@@ -54,6 +54,8 @@ class LibraryProcessingServiceTest {
     @Mock
     private BookGroupingService bookGroupingService;
     @Mock
+    private BookMergeService bookMergeService;
+    @Mock
     private BookCoverGenerator bookCoverGenerator;
     @Mock
     private BookMapper bookMapper;
@@ -74,6 +76,7 @@ class LibraryProcessingServiceTest {
                 bookDeletionService,
                 libraryFileHelper,
                 bookGroupingService,
+                bookMergeService,
                 bookCoverGenerator,
                 bookMapper,
                 entityManager
@@ -942,5 +945,34 @@ class LibraryProcessingServiceTest {
         verify(bookRepository, times(2)).findAllByLibraryIdForRescan(libraryId);
 
         verify(bookGroupingService).groupForRescan(eq(Collections.emptyList()), any(LibraryEntity.class));
+    }
+
+    @Test
+    void regroupSameFolderBooks_mergesEachPlanThenPurgesTheFoldedBooks() {
+        when(bookMergeService.planSameFolderMerges(1L)).thenReturn(List.of(
+                new BookGroupingService.MergePlan(2L, List.of(1L)),
+                new BookGroupingService.MergePlan(7L, List.of(5L, 6L))));
+
+        libraryProcessingService.regroupSameFolderBooks(1L);
+
+        var order = inOrder(bookMergeService, bookDeletionService);
+        order.verify(bookMergeService).mergeBooks(2L, List.of(1L));
+        order.verify(bookDeletionService).deleteRemovedBooks(List.of(1L));
+        order.verify(bookMergeService).mergeBooks(7L, List.of(5L, 6L));
+        order.verify(bookDeletionService).deleteRemovedBooks(List.of(5L, 6L));
+    }
+
+    @Test
+    void regroupSameFolderBooks_aFailedMergeIsSkippedAndItsBooksAreNotPurged() {
+        when(bookMergeService.planSameFolderMerges(1L)).thenReturn(List.of(
+                new BookGroupingService.MergePlan(2L, List.of(1L)),
+                new BookGroupingService.MergePlan(7L, List.of(5L))));
+        doThrow(new IllegalStateException("constraint")).when(bookMergeService).mergeBooks(2L, List.of(1L));
+
+        libraryProcessingService.regroupSameFolderBooks(1L);
+
+        verify(bookDeletionService, never()).deleteRemovedBooks(List.of(1L));
+        verify(bookMergeService).mergeBooks(7L, List.of(5L));
+        verify(bookDeletionService).deleteRemovedBooks(List.of(5L));
     }
 }
