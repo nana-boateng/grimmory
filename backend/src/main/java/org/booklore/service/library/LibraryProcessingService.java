@@ -47,6 +47,7 @@ public class LibraryProcessingService {
     private final BookDeletionService bookDeletionService;
     private final LibraryFileHelper libraryFileHelper;
     private final BookGroupingService bookGroupingService;
+    private final BookMergeService bookMergeService;
     private final BookCoverGenerator bookCoverGenerator;
     private final BookMapper bookMapper;
     @PersistenceContext
@@ -144,6 +145,23 @@ public class LibraryProcessingService {
         }
 
         notificationService.sendMessage(Topic.LOG, LogNotification.info("Finished refreshing library: " + libraryEntity.getName()));
+    }
+
+    /**
+     * Folds books that share a folder into one book when the library groups by folder. Deliberately not
+     * transactional and meant to run after {@link #rescanLibrary}, which only attaches new files and so
+     * never merges books it already created. Each folder merges in its own transaction; one that fails
+     * is logged and skipped, leaving its books as they were.
+     */
+    public void regroupSameFolderBooks(long libraryId) {
+        for (BookGroupingService.MergePlan plan : bookMergeService.planSameFolderMerges(libraryId)) {
+            try {
+                bookMergeService.mergeBooks(plan.winnerId(), plan.loserIds());
+                bookDeletionService.deleteRemovedBooks(plan.loserIds());
+            } catch (Exception e) {
+                log.error("Could not merge books {} into book {}: {}", plan.loserIds(), plan.winnerId(), e.getMessage(), e);
+            }
+        }
     }
 
     public void processLibraryFiles(List<LibraryFile> libraryFiles, LibraryEntity libraryEntity) {

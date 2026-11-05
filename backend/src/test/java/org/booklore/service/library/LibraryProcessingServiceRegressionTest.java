@@ -50,6 +50,8 @@ class LibraryProcessingServiceRegressionTest {
     @Mock
     private BookGroupingService bookGroupingService;
     @Mock
+    private BookMergeService bookMergeService;
+    @Mock
     private BookCoverGenerator bookCoverGenerator;
     @Mock
     private BookMapper bookMapper;
@@ -70,6 +72,7 @@ class LibraryProcessingServiceRegressionTest {
                 bookDeletionService,
                 libraryFileHelper,
                 bookGroupingService,
+                bookMergeService,
                 bookCoverGenerator,
                 bookMapper,
                 entityManager

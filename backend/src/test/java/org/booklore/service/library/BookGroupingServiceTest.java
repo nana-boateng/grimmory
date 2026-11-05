@@ -1,6 +1,8 @@
 package org.booklore.service.library;
 
 import org.booklore.model.dto.settings.LibraryFile;
+import org.booklore.model.entity.BookEntity;
+import org.booklore.model.entity.BookFileEntity;
 import org.booklore.model.entity.LibraryEntity;
 import org.booklore.model.entity.LibraryPathEntity;
 import org.booklore.model.enums.BookFileType;
@@ -729,5 +731,117 @@ class BookGroupingServiceTest {
 
         assertThat(groupCount(groups)).isEqualTo(2);
         assertThat(totalFiles(groups)).isEqualTo(4);
+    }
+
+    private BookEntity existingBook(long id, LibraryPathEntity path, String subPath, BookFileType... types) {
+        var book = BookEntity.builder().id(id).libraryPath(path).build();
+        long fileId = id * 10;
+        for (BookFileType type : types) {
+            var file = BookFileEntity.builder()
+                    .id(fileId++)
+                    .book(book)
+                    .fileName("book." + type.name().toLowerCase())
+                    .fileSubPath(subPath)
+                    .isBookFormat(true)
+                    .bookType(type)
+                    .build();
+            book.getBookFiles().add(file);
+        }
+        return book;
+    }
+
+    private LibraryEntity folderLibrary(LibraryPathEntity path, BookFileType... priority) {
+        var library = library(LibraryOrganizationMode.BOOK_PER_FOLDER, path);
+        library.setFormatPriority(List.of(priority));
+        return library;
+    }
+
+    @Test
+    void planSameFolderMerges_keepsTheBookWithTheBestFormatPriority() {
+        var path = pathEntity(1L, "/books");
+        var pdf = existingBook(1, path, "Clit-ology", BookFileType.PDF);
+        var epub = existingBook(2, path, "Clit-ology", BookFileType.EPUB);
+
+        var plans = bookGroupingService.planSameFolderMerges(List.of(pdf, epub),
+                folderLibrary(path, BookFileType.EPUB, BookFileType.PDF));
+
+        assertThat(plans).hasSize(1);
+        assertThat(plans.getFirst().winnerId()).isEqualTo(2L);
+        assertThat(plans.getFirst().loserIds()).containsExactly(1L);
+    }
+
+    @Test
+    void planSameFolderMerges_foldsThreeFormatsIntoOneBook() {
+        var path = pathEntity(1L, "/books");
+        var azw3 = existingBook(5, path, "Magnusson", BookFileType.AZW3);
+        var mobi = existingBook(6, path, "Magnusson", BookFileType.MOBI);
+        var epub = existingBook(7, path, "Magnusson", BookFileType.EPUB);
+
+        var plans = bookGroupingService.planSameFolderMerges(List.of(azw3, mobi, epub),
+                folderLibrary(path, BookFileType.EPUB, BookFileType.PDF, BookFileType.MOBI, BookFileType.AZW3));
+
+        assertThat(plans).hasSize(1);
+        assertThat(plans.getFirst().winnerId()).isEqualTo(7L);
+        assertThat(plans.getFirst().loserIds()).containsExactlyInAnyOrder(5L, 6L);
+    }
+
+    @Test
+    void planSameFolderMerges_breaksFormatTiesByLowestId() {
+        var path = pathEntity(1L, "/books");
+        var later = existingBook(9, path, "Dup", BookFileType.EPUB);
+        var earlier = existingBook(4, path, "Dup", BookFileType.EPUB);
+
+        var plans = bookGroupingService.planSameFolderMerges(List.of(later, earlier),
+                folderLibrary(path, BookFileType.EPUB));
+
+        assertThat(plans.getFirst().winnerId()).isEqualTo(4L);
+    }
+
+    @Test
+    void planSameFolderMerges_leavesLibraryRootFilesAlone() {
+        var path = pathEntity(1L, "/books");
+        var pdf = existingBook(1, path, "", BookFileType.PDF);
+        var epub = existingBook(2, path, "", BookFileType.EPUB);
+
+        assertThat(bookGroupingService.planSameFolderMerges(List.of(pdf, epub),
+                folderLibrary(path, BookFileType.EPUB, BookFileType.PDF))).isEmpty();
+    }
+
+    @Test
+    void planSameFolderMerges_leavesDifferentFoldersAndLibraryPathsAlone() {
+        var pathA = pathEntity(1L, "/books");
+        var pathB = pathEntity(2L, "/more");
+        var inA = existingBook(1, pathA, "Same Name", BookFileType.PDF);
+        var otherFolder = existingBook(2, pathA, "Other", BookFileType.EPUB);
+        var otherPath = existingBook(3, pathB, "Same Name", BookFileType.EPUB);
+
+        assertThat(bookGroupingService.planSameFolderMerges(List.of(inA, otherFolder, otherPath),
+                folderLibrary(pathA, BookFileType.EPUB, BookFileType.PDF))).isEmpty();
+    }
+
+    @Test
+    void planSameFolderMerges_doesNothingUnlessTheLibraryGroupsByFolder() {
+        var path = pathEntity(1L, "/books");
+        var pdf = existingBook(1, path, "Clit-ology", BookFileType.PDF);
+        var epub = existingBook(2, path, "Clit-ology", BookFileType.EPUB);
+
+        for (var mode : List.of(LibraryOrganizationMode.BOOK_PER_FILE, LibraryOrganizationMode.AUTO_DETECT)) {
+            assertThat(bookGroupingService.planSameFolderMerges(List.of(pdf, epub), library(mode, path)))
+                    .as(mode.name()).isEmpty();
+        }
+    }
+
+    @Test
+    void planSameFolderMerges_skipsAudiobooksFolderBasedEntriesAndDeletedBooks() {
+        var path = pathEntity(1L, "/books");
+        var epub = existingBook(1, path, "Mixed", BookFileType.EPUB);
+        var audio = existingBook(2, path, "Mixed", BookFileType.AUDIOBOOK);
+        var folderBased = existingBook(3, path, "Mixed", BookFileType.CBX);
+        folderBased.getBookFiles().forEach(f -> f.setFolderBased(true));
+        var deleted = existingBook(4, path, "Mixed", BookFileType.PDF);
+        deleted.setDeleted(true);
+
+        assertThat(bookGroupingService.planSameFolderMerges(List.of(epub, audio, folderBased, deleted),
+                folderLibrary(path, BookFileType.EPUB, BookFileType.PDF))).isEmpty();
     }
 }
