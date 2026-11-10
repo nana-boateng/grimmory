@@ -125,7 +125,7 @@ public class BookMetadataUpdater {
             log.warn("Failed to calculate metadata match score for book ID {}: {}", bookId, e.getMessage());
         }
 
-        if (appProperties.isLocalStorage() && primaryFile != null && bookType != null && ((writeToFile.isAnyFormatEnabled() && hasValueChangesForFileWrite) || thumbnailRequiresUpdate)) {
+        if (appProperties.isLocalStorage() && !context.isSkipFileWrite() && primaryFile != null && bookType != null && ((writeToFile.isAnyFormatEnabled() && hasValueChangesForFileWrite) || thumbnailRequiresUpdate)) {
             metadataWriterFactory.getWriter(bookType).ifPresent(writer -> {
                 try {
                     File file = bookEntity.getFullFilePath().toFile();
@@ -155,7 +155,7 @@ public class BookMetadataUpdater {
             });
         }
 
-        if (sidecarMetadataWriter.isWriteOnUpdateEnabled()) {
+        if (!context.isSkipFileWrite() && sidecarMetadataWriter.isWriteOnUpdateEnabled()) {
             try {
                 sidecarMetadataWriter.writeSidecarMetadata(bookEntity);
             } catch (Exception e) {
@@ -164,7 +164,7 @@ public class BookMetadataUpdater {
         }
 
         boolean moveFilesToLibraryPattern = settings.isMoveFilesToLibraryPattern();
-        if (moveFilesToLibraryPattern && primaryFile != null) {
+        if (moveFilesToLibraryPattern && !context.isSkipFileWrite() && primaryFile != null) {
             try {
                 BookEntity book = metadata.getBook();
                 FileMoveResult result = fileMoveService.moveSingleFile(book);
