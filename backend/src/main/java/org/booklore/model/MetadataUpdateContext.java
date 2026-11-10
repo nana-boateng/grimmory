@@ -19,4 +19,9 @@ public class MetadataUpdateContext {
     private boolean mergeMoods;
     private boolean mergeTags;
     private MetadataReplaceMode replaceMode;
+    /**
+     * Update the database only. Skips every change to files on disk that a metadata update can make on
+     * local storage: writing into the book, writing a sidecar file, and moving files to the library pattern.
+     */
+    private boolean skipFileWrite;
 }

@@ -15,6 +15,7 @@ import {AppSettingsService} from '../../../shared/service/app-settings.service';
 import {ExternalDocLinkComponent} from '../../../shared/components/external-doc-link/external-doc-link.component';
 import {MetadataAdvancedFetchOptionsComponent} from '../../metadata/component/metadata-options-dialog/metadata-advanced-fetch-options/metadata-advanced-fetch-options.component';
 import {SidecarService} from '../../metadata/service/sidecar.service';
+import {CalibreImportService} from '../../metadata/service/calibre-import.service';
 
 @Component({
   selector: 'app-library-metadata-settings-component',
@@ -28,6 +29,7 @@ export class LibraryMetadataSettingsComponent {
   private appSettingsService = inject(AppSettingsService);
   private messageService = inject(MessageService);
   private sidecarService = inject(SidecarService);
+  private calibreImportService = inject(CalibreImportService);
   private t = inject(TranslocoService);
   private destroyRef = inject(DestroyRef);
 
@@ -36,6 +38,7 @@ export class LibraryMetadataSettingsComponent {
   activePanel: number | null = null;
   sidecarExporting: Record<number, boolean> = {};
   sidecarImporting: Record<number, boolean> = {};
+  calibreImporting: Record<number, boolean> = {};
   isLocalStorage = true;
   private cachedDefaultOptions: Record<number, MetadataRefreshOptions> = {};
   private readonly syncLibraryOptionsEffect = effect(() => {
@@ -286,6 +289,34 @@ export class LibraryMetadataSettingsComponent {
         this.showMessage('error', this.t.translate('settingsLibMeta.libraryOverrides.importFailed'), this.t.translate('settingsLibMeta.libraryOverrides.importError'));
       }
     });
+  }
+
+  importCalibreForLibrary(libraryId: number, event: Event): void {
+    event.stopPropagation();
+    this.calibreImporting[libraryId] = true;
+
+    this.calibreImportService.importAll(libraryId).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (summary) => {
+        this.calibreImporting[libraryId] = false;
+        this.showMessage('success', this.t.translate('settingsLibMeta.libraryOverrides.calibreImportComplete'), this.t.translate('settingsLibMeta.libraryOverrides.calibreImportSuccess', {
+          imported: summary.imported,
+          covers: summary.coversUpdated,
+          withoutOpf: summary.withoutOpf,
+          failed: summary.failed
+        }));
+      },
+      error: (error) => {
+        this.calibreImporting[libraryId] = false;
+        console.error('Calibre import failed:', error);
+        this.showMessage('error', this.t.translate('settingsLibMeta.libraryOverrides.calibreImportFailed'), this.t.translate('settingsLibMeta.libraryOverrides.calibreImportError'));
+      }
+    });
+  }
+
+  isCalibreImporting(libraryId: number): boolean {
+    return this.calibreImporting[libraryId] ?? false;
   }
 
   isSidecarExporting(libraryId: number): boolean {

@@ -1810,6 +1810,66 @@ class BookMetadataUpdaterTest {
     }
 
     @Nested
+    class SkipFileWrite {
+
+        private void stubEverythingThatTouchesFiles(MockedStatic<MetadataChangeDetector> mcd) {
+            MetadataPersistenceSettings settings = MetadataPersistenceSettings.builder()
+                    .saveToOriginalFile(MetadataPersistenceSettings.SaveToOriginalFile.builder().build())
+                    .moveFilesToLibraryPattern(true)
+                    .build();
+            when(appSettingService.getAppSettings()).thenReturn(
+                    AppSettings.builder().metadataPersistenceSettings(settings).build());
+            // Lenient: with the flag set these are exactly the calls that must not happen.
+            lenient().when(sidecarMetadataWriter.isWriteOnUpdateEnabled()).thenReturn(true);
+            lenient().when(fileMoveService.moveSingleFile(any())).thenReturn(FileMoveResult.builder().moved(false).build());
+
+            mcd.when(() -> MetadataChangeDetector.isDifferent(any(), any(), any())).thenReturn(true);
+            mcd.when(() -> MetadataChangeDetector.hasValueChanges(any(), any(), any())).thenReturn(true);
+            mcd.when(() -> MetadataChangeDetector.hasLockChanges(any(), any())).thenReturn(false);
+            mcd.when(() -> MetadataChangeDetector.hasValueChangesForFileWrite(any(), any(), any())).thenReturn(true);
+        }
+
+        private MetadataUpdateContext context(boolean skipFileWrite) {
+            bookEntity.setBookFiles(Set.of(BookFileEntity.builder()
+                    .fileName("book.epub").bookType(BookFileType.EPUB).build()));
+            return MetadataUpdateContext.builder()
+                    .bookEntity(bookEntity)
+                    .metadataUpdateWrapper(MetadataUpdateWrapper.builder()
+                            .metadata(BookMetadata.builder().title("T").thumbnailUrl("http://example/cover.jpg").build())
+                            .build())
+                    .replaceMode(MetadataReplaceMode.REPLACE_ALL)
+                    .skipFileWrite(skipFileWrite)
+                    .build();
+        }
+
+        @Test
+        void onLocalStorage_withoutTheFlag_touchesFiles() {
+            try (MockedStatic<MetadataChangeDetector> mcd = mockStatic(MetadataChangeDetector.class)) {
+                stubEverythingThatTouchesFiles(mcd);
+
+                updater.setBookMetadata(context(false));
+
+                verify(metadataWriterFactory).getWriter(BookFileType.EPUB);
+                verify(sidecarMetadataWriter).writeSidecarMetadata(bookEntity);
+                verify(fileMoveService).moveSingleFile(any());
+            }
+        }
+
+        @Test
+        void onLocalStorage_withTheFlag_updatesTheDatabaseButTouchesNoFile() {
+            try (MockedStatic<MetadataChangeDetector> mcd = mockStatic(MetadataChangeDetector.class)) {
+                stubEverythingThatTouchesFiles(mcd);
+
+                updater.setBookMetadata(context(true));
+
+                verify(bookRepository).save(bookEntity);
+                verifyNoInteractions(metadataWriterFactory, fileMoveService);
+                verify(sidecarMetadataWriter, never()).writeSidecarMetadata(any());
+            }
+        }
+    }
+
+    @Nested
     class FileNameConversion {
 
         @Test

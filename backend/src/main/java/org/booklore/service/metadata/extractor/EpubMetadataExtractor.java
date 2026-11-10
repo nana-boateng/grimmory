@@ -123,6 +123,21 @@ public class EpubMetadataExtractor implements FileMetadataExtractor {
                 return null;
             }
 
+            return extractMetadataFromOpf(doc, FilenameUtils.getBaseName(epubFile.getName()));
+        } catch (Exception e) {
+            log.error("Failed to read metadata from EPUB file {}: {}", epubFile.getName(), e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Reads metadata from an already-parsed OPF package document: the one inside an EPUB, or a standalone
+     * {@code metadata.opf} such as the ones Calibre keeps next to each book.
+     *
+     * @param fallbackTitle used when the document has no title; may be null
+     */
+    public BookMetadata extractMetadataFromOpf(Document doc, String fallbackTitle) {
+        try {
             Element metadata = (Element) doc.getElementsByTagNameNS("*", "metadata").item(0);
             if (metadata == null) return null;
 
@@ -387,14 +402,14 @@ public class EpubMetadataExtractor implements FileMetadataExtractor {
 
             BookMetadata extractedMetadata = builderMeta.build();
 
-            if (StringUtils.isBlank(extractedMetadata.getTitle())) {
-                builderMeta.title(FilenameUtils.getBaseName(epubFile.getName()));
+            if (StringUtils.isBlank(extractedMetadata.getTitle()) && fallbackTitle != null) {
+                builderMeta.title(fallbackTitle);
                 extractedMetadata = builderMeta.build();
             }
 
             return extractedMetadata;
         } catch (Exception e) {
-            log.error("Failed to read metadata from EPUB file {}: {}", epubFile.getName(), e.getMessage(), e);
+            log.error("Failed to read OPF metadata: {}", e.getMessage(), e);
             return null;
         }
     }

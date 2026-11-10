@@ -840,7 +840,13 @@
       "importSuccess": "Imported metadata from {{count}} sidecar files.",
       "importComplete": "Import Complete",
       "importFailed": "Import Failed",
-      "importError": "Failed to import from sidecar files. Please try again."
+      "importError": "Failed to import from sidecar files. Please try again.",
+      "calibreImport": "Import from Calibre",
+      "calibreImportTooltip": "Read the metadata.opf and cover.jpg Calibre keeps in each book folder and apply them to this library's books. Nothing is written to your files.",
+      "calibreImportComplete": "Calibre Import Complete",
+      "calibreImportSuccess": "Imported Calibre metadata for {{imported}} books and {{covers}} covers. {{withoutOpf}} had no metadata.opf and {{failed}} failed.",
+      "calibreImportFailed": "Calibre Import Failed",
+      "calibreImportError": "Failed to import from Calibre. Please try again."
     }
   },
   "settingsApp": {
