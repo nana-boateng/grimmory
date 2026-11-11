@@ -4,7 +4,8 @@ import {Observable, tap} from 'rxjs';
 import {QueryClient} from '@tanstack/angular-query-experimental';
 
 import {API_CONFIG} from '../../../core/config/api-config';
-import {invalidateAllBookCaches} from '../../book/service/legacy-book-cache';
+import {invalidateAppBooksQueries} from '../../book/service/book-query-cache';
+import {BOOKS_QUERY_KEY} from '../../book/service/book-query-keys';
 import {invalidateAuthorsQuery} from '../../author-browser/service/author-query-cache';
 
 export interface CalibreImportSummary {
@@ -25,7 +26,9 @@ export class CalibreImportService {
       `${this.apiUrl}/libraries/${libraryId}/calibre/import-all`, {}
     ).pipe(
       tap(() => {
-        invalidateAllBookCaches(this.queryClient);
+        // Not `exact`: the per-book detail and recommendation queries live under the same prefix.
+        void this.queryClient.invalidateQueries({queryKey: BOOKS_QUERY_KEY});
+        invalidateAppBooksQueries(this.queryClient);
         invalidateAuthorsQuery(this.queryClient);
       })
     );

@@ -5,7 +5,7 @@ import {QueryClient} from '@tanstack/angular-query-experimental';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {API_CONFIG} from '../../../core/config/api-config';
-import {bookQueryKeys} from '../../book/data/book-query-keys';
+import {BOOKS_QUERY_KEY} from '../../book/service/book-query-keys';
 import {AUTHORS_QUERY_KEY} from '../../author-browser/service/author-query-keys';
 import {CalibreImportService} from './calibre-import.service';
 
@@ -59,7 +59,8 @@ describe('CalibreImportService', () => {
       .expectOne(`${API_CONFIG.BASE_URL}/api/v1/libraries/7/calibre/import-all`)
       .flush({imported: 1, withoutOpf: 0, failed: 0, coversUpdated: 1});
 
-    expect(invalidateQueriesSpy).toHaveBeenCalledWith({queryKey: bookQueryKeys.all()});
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({queryKey: BOOKS_QUERY_KEY});
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({queryKey: ['app-books']});
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({queryKey: AUTHORS_QUERY_KEY, exact: true});
   });
 
