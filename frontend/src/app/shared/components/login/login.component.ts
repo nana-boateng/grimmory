@@ -10,10 +10,11 @@ import {take} from 'rxjs/operators';
 import {AppSettingsService} from '../../service/app-settings.service';
 import {TranslocoDirective, TranslocoService} from '@jsverse/transloco';
 import {OidcService} from '../../../core/security/oidc.service';
+import {BrandMarkComponent} from '../../ui/brand-mark/brand-mark.component';
 
 @Component({
   selector: 'app-login',
-  imports: [
+  imports: [BrandMarkComponent, 
     FormsModule,
     Password,
     Button,

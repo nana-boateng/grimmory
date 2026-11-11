@@ -7,13 +7,14 @@ import {Button} from '@openng/optimus-ui/button';
 import {Message} from '@openng/optimus-ui/message';
 import {passwordMatchValidator} from '../../validators/password-match.validator';
 import {TranslocoDirective, TranslocoService} from '@jsverse/transloco';
+import {BrandMarkComponent} from '../../ui/brand-mark/brand-mark.component';
 
 @Component({
   selector: 'app-setup',
   templateUrl: './setup.component.html',
   styleUrls: ['./setup.component.scss'],
   standalone: true,
-  imports: [
+  imports: [BrandMarkComponent, 
     ReactiveFormsModule,
     InputText,
     Button,

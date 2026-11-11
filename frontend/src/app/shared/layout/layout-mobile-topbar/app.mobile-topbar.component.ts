@@ -5,13 +5,14 @@ import { LucideArrowLeft, LucideMenu, LucideSearch, LucideX } from '@lucide/angu
 import { CommandPaletteService } from '../../../features/command-palette/command-palette.service';
 import { LayoutService } from '../layout.service';
 import { PageHeaderService } from '../page-header/page-header.service';
+import {BrandMarkComponent} from '../../ui/brand-mark/brand-mark.component';
 
 @Component({
   selector: 'app-mobile-topbar',
   templateUrl: './app.mobile-topbar.component.html',
   styleUrl: './app.mobile-topbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoDirective, TranslocoPipe, LucideArrowLeft, LucideMenu, LucideSearch, LucideX],
+  imports: [BrandMarkComponent, TranslocoDirective, TranslocoPipe, LucideArrowLeft, LucideMenu, LucideSearch, LucideX],
 })
 export class AppMobileTopbarComponent {
   readonly layoutService = inject(LayoutService);

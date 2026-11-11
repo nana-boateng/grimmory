@@ -34,7 +34,7 @@
   padding: var(--sidebar-row-padding-block) var(--sidebar-row-padding-inline-end) var(--sidebar-row-padding-block) var(--sidebar-row-padding-inline-start);
   color: var(--color-text);
   text-decoration: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 
   &:hover {
     color: var(--color-primary);
@@ -71,20 +71,33 @@
 }
 
 .sidebar-brand-wordmark {
-  /* In-flow grid item with fixed width + min-width. The min-width pin prevents
-     the wordmark from shrinking when the grid tracks shrink during the sidebar
-     expand animation. Width = min(default-sidebar-content, stored-content): fills
-     exactly at default 225px, scales down when the user resizes narrower. Height
-     is pinned alongside width so the wordmark and G-only icon are the same size. */
-  --wordmark-width: calc(min(225px, var(--sidebar-stored-width, 225px)) - 2.1875rem);
-
-  display: block;
-  width: var(--wordmark-width);
-  min-width: var(--wordmark-width);
-  height: var(--brand-content-height);
+  /* The mark plus the name as plain text in the app font. Spans the whole row, so it does not change
+     width when the sidebar animates between collapsed and expanded; the collapsed state shows
+     .sidebar-brand-mark instead (see _sidebar.scss). */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   grid-column: 1 / -1;
   justify-self: start;
+  min-width: 0;
+  height: var(--brand-content-height);
   transform: translateX(var(--sidebar-brand-optical-nudge));
+}
+
+.sidebar-brand-wordmark-icon {
+  height: var(--brand-content-height);
+  flex-shrink: 0;
+}
+
+.sidebar-brand-wordmark-text {
+  overflow: hidden;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-strong);
 }
 
 .sidebar-toolbar-button {

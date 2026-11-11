@@ -106,8 +106,8 @@ describe('AppThemeService', () => {
     expect(rootStyle.getPropertyValue('--color-app')).toBe('');
     expect(rootStyle.getPropertyValue('--color-card')).toBe('');
     expect(faviconServiceMock.updateFavicon).toHaveBeenCalledWith(
-      'primary-300',
-      'primary-500'
+      'primary-600',
+      'primary-800'
     );
   });
 
@@ -122,8 +122,8 @@ describe('AppThemeService', () => {
     expect(rootStyle.getPropertyValue('--primary-300')).toBe('');
     expect(rootStyle.getPropertyValue('--color-card')).toBe('');
     expect(faviconServiceMock.updateFavicon).toHaveBeenLastCalledWith(
-      'primary-300',
-      'primary-500'
+      'primary-600',
+      'primary-800'
     );
   });
 

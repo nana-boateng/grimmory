@@ -86,17 +86,29 @@
   --text-app-base: 0.875rem;
   --text-app-lg: 0.9844rem;
 
-  --color-primary-50: var(--color-orange-50);
-  --color-primary-100: var(--color-orange-100);
-  --color-primary-200: var(--color-orange-200);
-  --color-primary-300: var(--color-orange-300);
-  --color-primary-400: var(--color-orange-400);
-  --color-primary-500: var(--color-orange-500);
-  --color-primary-600: var(--color-orange-600);
-  --color-primary-700: var(--color-orange-700);
-  --color-primary-800: var(--color-orange-800);
-  --color-primary-900: var(--color-orange-900);
-  --color-primary-950: var(--color-orange-950);
+  --color-ledger-50: #f2f3ff;
+  --color-ledger-100: #e4e6ff;
+  --color-ledger-200: #cdd1ff;
+  --color-ledger-300: #b7bfff;
+  --color-ledger-400: #a3adff;
+  --color-ledger-500: #6670e0;
+  --color-ledger-600: #3f47c2;
+  --color-ledger-700: #343aa3;
+  --color-ledger-800: #2b3085;
+  --color-ledger-900: #232868;
+  --color-ledger-950: #161948;
+
+  --color-primary-50: var(--color-ledger-50);
+  --color-primary-100: var(--color-ledger-100);
+  --color-primary-200: var(--color-ledger-200);
+  --color-primary-300: var(--color-ledger-300);
+  --color-primary-400: var(--color-ledger-400);
+  --color-primary-500: var(--color-ledger-500);
+  --color-primary-600: var(--color-ledger-600);
+  --color-primary-700: var(--color-ledger-700);
+  --color-primary-800: var(--color-ledger-800);
+  --color-primary-900: var(--color-ledger-900);
+  --color-primary-950: var(--color-ledger-950);
   --color-primary: var(--color-primary-600);
   --color-primary-hover: var(--color-primary-700);
   --color-primary-active: var(--color-primary-800);
@@ -133,7 +145,7 @@
   --color-info: var(--color-sky-600);
   --color-logo-start: var(--color-primary-400);
   --color-logo-end: var(--color-primary-600);
-  --color-logo-bookmark: #FF2126;
+  --color-logo-bookmark: var(--color-surface-50);
 
   --shadow-control: 0 1px 2px -1px rgb(0 0 0 / 6%), 0 2px 4px 0 rgb(0 0 0 / 4%);
   --shadow-pop: 0 4px 12px -2px rgb(0 0 0 / 12%), 0 2px 6px -2px rgb(0 0 0 / 8%);
@@ -172,7 +184,7 @@
   --color-primary-text: var(--color-primary-700);
   --color-logo-start: var(--color-primary-400);
   --color-logo-end: var(--color-primary-600);
-  --color-logo-bookmark: #FF2126;
+  --color-logo-bookmark: var(--color-surface-50);
 }
 
 .dark {
@@ -191,7 +203,7 @@
   --color-primary-text: var(--color-primary-400);
   --color-logo-start: var(--color-primary-300);
   --color-logo-end: var(--color-primary-500);
-  --color-logo-bookmark: var(--color-white);
+  --color-logo-bookmark: var(--color-surface-950);
   --color-warning: var(--color-amber-400);
   --color-info: var(--color-sky-400);
   --shadow-control: 0 1px 2px -1px rgb(0 0 0 / 50%), 0 2px 4px 0 rgb(0 0 0 / 40%);
@@ -200,17 +212,17 @@
 
 [data-app-theme="grimmory"] {
   --app-primary-tint: 3%;
-  --color-primary-50: var(--color-orange-50);
-  --color-primary-100: var(--color-orange-100);
-  --color-primary-200: var(--color-orange-200);
-  --color-primary-300: var(--color-orange-300);
-  --color-primary-400: var(--color-orange-400);
-  --color-primary-500: var(--color-orange-500);
-  --color-primary-600: var(--color-orange-600);
-  --color-primary-700: var(--color-orange-700);
-  --color-primary-800: var(--color-orange-800);
-  --color-primary-900: var(--color-orange-900);
-  --color-primary-950: var(--color-orange-950);
+  --color-primary-50: var(--color-ledger-50);
+  --color-primary-100: var(--color-ledger-100);
+  --color-primary-200: var(--color-ledger-200);
+  --color-primary-300: var(--color-ledger-300);
+  --color-primary-400: var(--color-ledger-400);
+  --color-primary-500: var(--color-ledger-500);
+  --color-primary-600: var(--color-ledger-600);
+  --color-primary-700: var(--color-ledger-700);
+  --color-primary-800: var(--color-ledger-800);
+  --color-primary-900: var(--color-ledger-900);
+  --color-primary-950: var(--color-ledger-950);
   --color-surface-0: var(--color-white);
   --color-surface-50: var(--color-stone-50);
   --color-surface-100: var(--color-stone-100);

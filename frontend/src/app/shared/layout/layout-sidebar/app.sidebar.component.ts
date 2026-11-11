@@ -59,6 +59,7 @@ import { APPEARANCE_OPTIONS } from '../theme/appearance-options';
 import {AppMenuComponent} from '../../ui/menu/app-menu.component';
 import {AppMenuItemComponent} from '../../ui/menu/app-menu-item.component';
 import {AppMenuTriggerDirective} from '../../ui/menu/app-menu-trigger.directive';
+import {BrandMarkComponent} from '../../ui/brand-mark/brand-mark.component';
 
 const DOCUMENTATION_URL = 'https://grimmory.org/docs/getting-started';
 const ABOVE_ALIGN_LEFT: ConnectedPosition[] = [
@@ -124,7 +125,7 @@ function isNewerVersion(latest: string | undefined, current: string | undefined)
 
 @Component({
   selector: 'app-sidebar',
-  imports: [
+  imports: [BrandMarkComponent, 
     AppSidebarSectionComponent,
     AppButtonDirective,
     LucideArrowUpRight,
